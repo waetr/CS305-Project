@@ -18,10 +18,10 @@ Implemented features:
 1. three-way handshake and four-Way wavehand
 2. Basic sender and receiver
 3. Sender can send data multiple times to receiver, and receiver can store the data
+4. retransmitting
+5. checksum verification
 
 Features under development:
 1. Multithread in accept()
-2. retransmitting
-3. checksum verification (I have implemented the code in Header.py, where I only raise an error but does not handle it in the following codes)
-4. big file transmission (chunking)
-5. pipeline manner (congestion control, flow control, etc.)
+2. big file transmission (chunking)
+3. pipeline manner (congestion control, flow control, etc.)
