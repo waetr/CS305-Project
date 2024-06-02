@@ -5,16 +5,19 @@ import random
 import time
 from Header import RDTHeader
 
-# fromSenderAddr = ('127.0.0.1', 12345)
-# toReceiverAddr = ('127.0.0.1', 12346)
-# fromReceiverAddr = ('127.0.0.1', 12347)
-# toSenderAddr = ('127.0.0.1', 12348)
+# local server
 
-proxy_server_address = ('10.16.52.94', 12234)   # ProxyServerAddress
-fromSenderAddr = ('10.16.52.94', 12345)         # FromSender
-toReceiverAddr = ('10.16.52.94', 12346)         # ToSender
-fromReceiverAddr = ('10.16.52.94', 12347)       # FromReceiver
-toSenderAddr = ('10.16.52.94', 12348)           # ToReceiver
+fromSenderAddr = ('127.0.0.1', 12345)
+toReceiverAddr = ('127.0.0.1', 12346)
+fromReceiverAddr = ('127.0.0.1', 12347)
+toSenderAddr = ('127.0.0.1', 12348)
+
+# proxy server
+
+# fromSenderAddr = ('10.16.52.94', 12345)         # FromSender
+# toReceiverAddr = ('10.16.52.94', 12346)         # ToSender
+# fromReceiverAddr = ('10.16.52.94', 12347)       # FromReceiver
+# toSenderAddr = ('10.16.52.94', 12348)           # ToReceiver
 
 class RDTSocket():
     def __init__(self, TYPE) -> None:
