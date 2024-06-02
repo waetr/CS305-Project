@@ -61,7 +61,7 @@ def case_test(pkt, outSock: socket.socket):
         
 
         
-        if test_case == 0:
+        if test_case in [0,1]:
             if len(connection_pool[connection_key]) == 1:
                 outSock.sendto(pkt, addr)
             else:

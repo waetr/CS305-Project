@@ -6,32 +6,32 @@ import signal
 
 # connect proxy server
 
-# proxy_server_address = ('10.16.52.94', 12234)   # ProxyServerAddress
-# fromSenderAddr = ('10.16.52.94', 12345)         # FromSender
-# toReceiverAddr = ('10.16.52.94', 12346)         # ToSender
-# fromReceiverAddr = ('10.16.52.94', 12347)       # FromReceiver
-# toSenderAddr = ('10.16.52.94', 12348)           # ToReceiver
-#
-# resultAddr = ('10.16.52.94', 12230)
-#
+proxy_server_address = ('10.16.52.94', 12234)   # ProxyServerAddress
+fromSenderAddr = ('10.16.52.94', 12345)         # FromSender
+toReceiverAddr = ('10.16.52.94', 12346)         # ToSender
+fromReceiverAddr = ('10.16.52.94', 12347)       # FromReceiver
+toSenderAddr = ('10.16.52.94', 12348)           # ToReceiver
+
+resultAddr = ('10.16.52.94', 12230)
+
 # TODO change the adress to your address
-# sender_address = ("10.16.196.135", 12244)
-# receiver_address = ("10.16.196.135", 12249)
+sender_address = ("10.16.196.135", 12244)
+receiver_address = ("10.16.196.135", 12249)
 
 
 
 # connect locally server
 
-proxy_server_address = ('127.0.0.1', 12234)
-fromSenderAddr = ('127.0.0.1', 12345)
-toReceiverAddr = ('127.0.0.1', 12346)
-fromReceiverAddr = ('127.0.0.1', 12347)
-toSenderAddr = ('127.0.0.1', 12348)
-
-sender_address = ("127.0.0.1", 12244)
-receiver_address = ("127.0.0.1", 12249)
-resultAddr = ("127.0.0.1", 12230)
-num_test_case = 1
+# proxy_server_address = ('127.0.0.1', 12234)
+# fromSenderAddr = ('127.0.0.1', 12345)
+# toReceiverAddr = ('127.0.0.1', 12346)
+# fromReceiverAddr = ('127.0.0.1', 12347)
+# toSenderAddr = ('127.0.0.1', 12348)
+#
+# sender_address = ("127.0.0.1", 12244)
+# receiver_address = ("127.0.0.1", 12249)
+# resultAddr = ("127.0.0.1", 12230)
+num_test_case = 5
 
 class TimeoutException(Exception):
     pass
@@ -53,8 +53,8 @@ def test_case():
             del sender_sock
         if reciever_sock:
             del reciever_sock
-        sender_sock = RDTSocket(TYPE='client')   # You can change the initialize RDTSocket()
-        reciever_sock = RDTSocket(TYPE='server') # You can change the initialize RDTSocket()
+        sender_sock = RDTSocket(TYPE='client', testcase=i)   # You can change the initialize RDTSocket()
+        reciever_sock = RDTSocket(TYPE='server', testcase=i) # You can change the initialize RDTSocket()
         print(f"Start test case : {i}")
 
         result = None
@@ -151,6 +151,11 @@ def RDT_send(sender_sock: RDTSocket, source_address, target_address, test_case):
             # TODO: you need to send a short message. May be you can use:
         data = "Here is some text"
         sock.send(data=data, test_case=test_case)
+        # data = "Here is 1 text"
+        # sock.send(data=data, test_case=test_case)
+        # data = "Here is 2 text efefef"
+        # sock.send(data=data, test_case=test_case)
+        time.sleep(1.0)
         sock.close()
 
             # raise NotImplementedError
