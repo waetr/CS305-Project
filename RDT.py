@@ -1,7 +1,5 @@
-import copy
-import threading
-import socket
 import random
+import socket
 import time
 from Header import RDTHeader
 
@@ -14,13 +12,15 @@ from Header import RDTHeader
 
 # proxy server
 
-fromSenderAddr = ('10.16.52.94', 12345)         # FromSender
-toReceiverAddr = ('10.16.52.94', 12346)         # ToSender
-fromReceiverAddr = ('10.16.52.94', 12347)       # FromReceiver
-toSenderAddr = ('10.16.52.94', 12348)           # ToReceiver
+fromSenderAddr = ('10.16.52.94', 12345)  # FromSender
+toReceiverAddr = ('10.16.52.94', 12346)  # ToSender
+fromReceiverAddr = ('10.16.52.94', 12347)  # FromReceiver
+toSenderAddr = ('10.16.52.94', 12348)  # ToReceiver
+
 
 def print_header(header):
-    print(f"[{header.src}->{header.tgt}]: SYN={header.SYN} FIN={header.FIN} ACK={header.ACK} SEQ_NUM={header.SEQ_num} ACK_NUM={header.ACK_num}")
+    print(
+        f"[{header.src}->{header.tgt}]: SYN={header.SYN} FIN={header.FIN} ACK={header.ACK} SEQ_NUM={header.SEQ_num} ACK_NUM={header.ACK_num}")
 
 
 class RDTSocket():
@@ -73,10 +73,9 @@ class RDTSocket():
                 print_header(response)
                 self.socket.sendto(response.to_bytes(), fromReceiverAddr)
             if (header.SYN == 0 and header.ACK == 1 and header.ACK_num == self.isn + 1) or \
-                (header.SYN == 0 and header.ACK == 0 and header.LEN > 0):
+                    (header.SYN == 0 and header.ACK == 0 and header.LEN > 0):
                 self.connections[header.src] = 1
                 break
-
 
     def connect(self, address: (str, int)):  # type: ignore
         """
@@ -182,12 +181,10 @@ class RDTSocket():
                 window_size = window_size // 2
             else:
                 if window_size < 8:
-                    window_size = 1 if (window_size == 0) else window_size * 2
+                    window_size = random.randint(1, 2) if (window_size == 0) else window_size * 2
 
         self.socket.setblocking(True)
         print("")
-
-
 
     def recv(self):
         """

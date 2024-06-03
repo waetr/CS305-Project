@@ -31,7 +31,7 @@ receiver_address = ("10.16.196.135", 12249)
 # sender_address = ("127.0.0.1", 12244)
 # receiver_address = ("127.0.0.1", 12249)
 # resultAddr = ("127.0.0.1", 12230)
-num_test_case = 1
+num_test_case = 16
 
 class TimeoutException(Exception):
     pass
@@ -48,7 +48,7 @@ def test_case():
 
     # TODO: You could change the range of this loop to test specific case(s) in local test.
 
-    for i in [15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]: # range(num_test_case):
+    for i in range(num_test_case):
         if sender_sock:
             del sender_sock
         if reciever_sock:
