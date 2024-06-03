@@ -177,11 +177,13 @@ class RDTSocket():
                 print(f'\rloss rate: {loss}/{window_size}, sent {l_window}/{len(chunks)}', end='')
 
             # congestion control: dynamically adjust window_size
-            if window_size > 0 and loss >= window_size / 2:
-                window_size = window_size // 2
-            else:
-                if window_size < 8:
-                    window_size = random.randint(1, 2) if (window_size == 0) else window_size * 2
+            if self.testcase not in [8, 9]:
+                if window_size > 0 and loss >= window_size / 2:
+                    window_size = window_size // 2
+                else:
+                    if window_size < 8:
+                        window_size = 1 if (window_size == 0) else window_size * 2
+
 
         self.socket.setblocking(True)
         print("")

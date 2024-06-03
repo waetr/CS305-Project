@@ -48,7 +48,7 @@ def test_case():
 
     # TODO: You could change the range of this loop to test specific case(s) in local test.
 
-    for i in range(num_test_case):
+    for i in [12, 15]: # range(num_test_case):
         if sender_sock:
             del sender_sock
         if reciever_sock:
