@@ -185,6 +185,7 @@ class RDTSocket():
                     window_size = 1 if (window_size == 0) else window_size * 2
 
         self.socket.setblocking(True)
+        print("")
 
 
 
