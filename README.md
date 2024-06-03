@@ -16,12 +16,11 @@ The code can now pass Testcase 1.
 
 Implemented features: 
 1. three-way handshake and four-Way wavehand
-2. Basic sender and receiver
-3. Sender can send data multiple times to receiver, and receiver can store the data
+2. send and receive with loss, corruption, and delay
 4. retransmitting
 5. checksum verification
+6. big file transmission and file chunking
+7. pipeline manner (including flow control & congestion control)
 
 Features under development:
 1. Multithread in accept()
-2. big file transmission (chunking)
-3. pipeline manner (congestion control, flow control, etc.)

@@ -31,7 +31,7 @@ receiver_address = ("10.16.196.135", 12249)
 # sender_address = ("127.0.0.1", 12244)
 # receiver_address = ("127.0.0.1", 12249)
 # resultAddr = ("127.0.0.1", 12230)
-num_test_case = 5
+num_test_case = 1
 
 class TimeoutException(Exception):
     pass
@@ -48,7 +48,7 @@ def test_case():
 
     # TODO: You could change the range of this loop to test specific case(s) in local test.
 
-    for i in range(num_test_case):
+    for i in [15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]: # range(num_test_case):
         if sender_sock:
             del sender_sock
         if reciever_sock:
@@ -94,7 +94,6 @@ def test_case():
 
 
             time.sleep(10)
-    
 
 def RDT_start_test(sender_sock, reciever_sock, sender_address, receiver_address, test_case):
     sender = Process(target=RDT_send, args=(sender_sock, sender_address, receiver_address, test_case))
@@ -138,23 +137,25 @@ def RDT_send(sender_sock: RDTSocket, source_address, target_address, test_case):
     sock.connect(target_address)
     print("Client connect successfully!")
 
+    time.sleep(1.0)
+
     if test_case >= 5:
         #############################################################################
             # TODO: you need to send a files. Here you need to write the code according to your own implementation.
 
-            raise NotImplementedError
+        with open('original.txt', 'r') as f:
+            data = f.read()
+            sock.send(data=data, test_case=test_case)
+        time.sleep(1.0)
+        sock.close()
         #############################################################################
 
     else:
 
         #############################################################################
             # TODO: you need to send a short message. May be you can use:
-        data = "Here is some text"
+        data = "Here is 1 text"
         sock.send(data=data, test_case=test_case)
-        # data = "Here is 1 text"
-        # sock.send(data=data, test_case=test_case)
-        # data = "Here is 2 text efefef"
-        # sock.send(data=data, test_case=test_case)
         time.sleep(1.0)
         sock.close()
 
@@ -184,7 +185,11 @@ def RDT_receive(reciever_sock: RDTSocket, source_address, test_case):
 
             # you should Save all data to the file (transmit.txt), and stop this loop when the client close the connection. 
             # After that, you need to use the following function to verify the file that you received. When test_case >= 5, the test is passed only when test_file_integrity is verified and the proxy is verified.
-        raise NotImplementedError
+        reveived = sock.recv()
+        with open("transmit.txt", 'w') as f:
+            f.write(reveived)
+        print("received file and stored to 'transmit.txt'.")
+
         #############################################################################
         
     else:
