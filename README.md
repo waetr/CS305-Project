@@ -64,7 +64,7 @@ As shown in the figure, in the notification window, all unacknowledged packets w
 
 ### Congestion control
 
-We have implemented congestion control by monitoring the packet loss rate and dynamically adjusting the window size. Specifically, at the end of each round of transmission, the sender computes the loss rate as $\frac{\text{number of sent but unacknowledged packets}}{\text{window\_size}}$. If the loss rate is larger than half of the window size, the sender decreases the window size by one-half. In the next round, if the loss rate is still larger than half of the window size, the window size is decreased similarly, until the size becomes 0. Otherwise, the window size is doubled. By doing this, the speed of transmission will be reduced when the loss rate becomes high and will be increased when the loss rate is low. The code is shown below:
+We have implemented congestion control by monitoring the packet loss rate and dynamically adjusting the window size. Specifically, at the end of each round of transmission, the sender computes the loss rate as $\frac{\text{number of sent but unacknowledged packets}}{\text{window size}}$. If the loss rate is larger than half of the window size, the sender decreases the window size by one-half. In the next round, if the loss rate is still larger than half of the window size, the window size is decreased similarly, until the size becomes 0. Otherwise, the window size is doubled. By doing this, the speed of transmission will be reduced when the loss rate becomes high and will be increased when the loss rate is low. The code is shown below:
 
 ```python
 if window_size > 0 and loss > window_size / 2:
