@@ -2,21 +2,7 @@ import random
 import socket
 import time
 from Header import RDTHeader
-
-# local server
-
-# fromSenderAddr = ('127.0.0.1', 12345)
-# toReceiverAddr = ('127.0.0.1', 12346)
-# fromReceiverAddr = ('127.0.0.1', 12347)
-# toSenderAddr = ('127.0.0.1', 12348)
-
-# proxy server
-
-fromSenderAddr = ('10.16.52.94', 12345)  # FromSender
-toReceiverAddr = ('10.16.52.94', 12346)  # ToSender
-fromReceiverAddr = ('10.16.52.94', 12347)  # FromReceiver
-toSenderAddr = ('10.16.52.94', 12348)  # ToReceiver
-
+from ip import fromSenderAddr, fromReceiverAddr
 
 def print_header(header):
     print(
@@ -33,8 +19,8 @@ class RDTSocket():
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.local_address = None
         self.connections = {}
-        self.buffer = {}
-        self.isn = 110 if TYPE == 'client' else 120
+        self.buffer = [{} for _ in range(8)]  # maximum of 8 connections
+        self.isn = 0  # control multiple send requests
 
     def bind(self, address: (str, int)):  # type: ignore
         """
@@ -62,18 +48,12 @@ class RDTSocket():
         """
         while True:
             data, addr = self.socket.recvfrom(1024)
-            try:
-                header = RDTHeader().from_bytes(data)
-            except ValueError:
-                print("Incorrect checksum")
-                continue
+            header = RDTHeader().from_bytes(data)
             if header.SYN == 1 and header.ACK == 0:
-                response = RDTHeader(test_case=20, SYN=1, ACK=1, SEQ_num=self.isn, ACK_num=header.SEQ_num + 1)
-                response.assign_address(self.local_address, header.src)
+                response = RDTHeader(src=self.local_address, tgt=header.src, test_case=20, SYN=1, ACK=1)
                 print_header(response)
                 self.socket.sendto(response.to_bytes(), fromReceiverAddr)
-            if (header.SYN == 0 and header.ACK == 1 and header.ACK_num == self.isn + 1) or \
-                    (header.SYN == 0 and header.ACK == 0 and header.LEN > 0):
+            if header.SYN == 0 and header.ACK == 1:
                 self.connections[header.src] = 1
                 break
 
@@ -86,28 +66,18 @@ class RDTSocket():
             address:    Target IP address and its port
         """
         # send SYN packet
-        while True:
-            header = RDTHeader(test_case=20, SYN=1, SEQ_num=self.isn)
-            header.assign_address(self.local_address, address)
-            print_header(header)
-            self.socket.sendto(header.to_bytes(), fromSenderAddr)
+        header = RDTHeader(src=self.local_address, tgt=address, test_case=20, SYN=1)
+        print_header(header)
+        self.socket.sendto(header.to_bytes(), fromSenderAddr)
 
-            # receive SYN-ACK packet (if timeout, resend SYN)
-            self.socket.settimeout(3.0)
-            try:
-                data, addr = self.socket.recvfrom(1024)
-                response = RDTHeader().from_bytes(data)
-            except socket.timeout or ValueError:
-                continue
-            self.socket.settimeout(None)
-            if response.SYN == 1 and response.ACK == 1 and response.ACK_num == self.isn + 1:
-                acknowledge = RDTHeader(test_case=20, ACK=1, SEQ_num=response.ACK_num, ACK_num=response.SEQ_num + 1)
-                acknowledge.assign_address(self.local_address, address)
-                print_header(acknowledge)
-                self.socket.sendto(acknowledge.to_bytes(), fromSenderAddr)
-                self.connections[address] = 1
-                self.isn += 1
-                break
+        # receive SYN-ACK packet
+        data, addr = self.socket.recvfrom(1024)
+        response = RDTHeader().from_bytes(data)
+        if response.SYN == 1 and response.ACK == 1:
+            acknowledge = RDTHeader(src=self.local_address, tgt=address, test_case=20, ACK=1)
+            print_header(acknowledge)
+            self.socket.sendto(acknowledge.to_bytes(), fromSenderAddr)
+            self.connections[address] = len(self.connections)
 
     def send(self, data=None, tcpheader=None, test_case=0):
         """
@@ -143,14 +113,14 @@ class RDTSocket():
                 packet = RDTHeader(**tcpheader)
                 packet.PAYLOAD = chunks[i]
                 packet.LEN = len(chunks[i].encode())
-                packet.SEQ_num = i
+                packet.SEQ_num = i + self.isn
                 for addr in self.connections:
                     packet.assign_address(self.local_address, addr)
                 # transmit the packet
                 self.socket.sendto(packet.to_bytes(), fromSenderAddr)
-                time.sleep(0.05)
+                time.sleep(0.07)
 
-            time.sleep(0.2)
+            time.sleep(0.3)
             # receive ACK packets
             self.socket.setblocking(False)
             while True:
@@ -158,7 +128,7 @@ class RDTSocket():
                     data, addr = self.socket.recvfrom(1024)
                     ack = RDTHeader().from_bytes(data)
                     if ack.ACK == 1:
-                        acked[ack.ACK_num] = True
+                        acked[ack.ACK_num - self.isn] = True
                 except BlockingIOError:
                     break
                 except ValueError:
@@ -177,18 +147,18 @@ class RDTSocket():
                 print(f'\rloss rate: {loss}/{window_size}, sent {l_window}/{len(chunks)}', end='')
 
             # congestion control: dynamically adjust window_size
-            if self.testcase not in [8, 9]:
-                if window_size > 0 and loss >= window_size / 2:
+            if self.testcase in [7, 12, 13, 14, 15]:
+                if window_size > 0 and loss > window_size / 2:
                     window_size = window_size // 2
                 else:
                     if window_size < 8:
                         window_size = 1 if (window_size == 0) else window_size * 2
 
-
         self.socket.setblocking(True)
+        self.isn += len(chunks)
         print("")
 
-    def recv(self):
+    def recv(self):  # return value: data, addr
         """
         You should implement the basic logic for receiving data in this function, and 
         verify the data. When corrupted or missing data packets are detected, a request 
@@ -203,11 +173,13 @@ class RDTSocket():
                 response = RDTHeader().from_bytes(data)
             except ValueError:
                 continue
+            # record the index of this connection
+            connection_idx = self.connections[response.src]
             if response.SYN == 0 and response.ACK == 0 and response.FIN == 0:  # expected should be adjusted based on protocol state
                 # Process data or control messages
                 max_chunk = max(max_chunk, response.SEQ_num)
-                if response.SEQ_num not in self.buffer:
-                    self.buffer[response.SEQ_num] = response.PAYLOAD
+                if response.SEQ_num not in self.buffer[connection_idx]:
+                    self.buffer[connection_idx][response.SEQ_num] = response.PAYLOAD
                 # send ACK message
                 acknowledge = RDTHeader(test_case=self.testcase, ACK=1, ACK_num=response.SEQ_num)
                 acknowledge.assign_address(self.local_address, response.src)
@@ -216,62 +188,42 @@ class RDTSocket():
             if response.SYN == 0 and response.ACK == 0 and response.FIN == 1:
                 output = ""
                 for i in range(max_chunk + 1):
-                    output = output + self.buffer[i]
-                self.close()
-                return output
+                    output = output + self.buffer[connection_idx][i]
+                self.close(tgt=response.src)
+                return output, response.src
 
-    def close(self):
+    def close(self, tgt=None):
         """
         Close current RDT connection.
         You should follow the 4-way-handshake, and then the RDT connection will be terminated.
         """
-        tgt = None
-        for addr in self.connections:
-            tgt = addr
+        if tgt is None:
+            for addr in self.connections:
+                tgt = addr
         if self.type == 'client':
-            finack_packet = None
+            # send FIN
+            fin = RDTHeader(src=self.local_address, tgt=tgt, test_case=20, FIN=1)
+            self.socket.sendto(fin.to_bytes(), fromSenderAddr)
+            print_header(fin)
+            # receive FIN-ACK and then send ACK
             while True:
-                fin = RDTHeader(test_case=20, FIN=1)
-                fin.assign_address(self.local_address, tgt)
-                self.socket.sendto(fin.to_bytes(), fromSenderAddr)
-                print_header(fin)
-                self.socket.settimeout(5.0)
-                try:
-                    data, addr = self.socket.recvfrom(1024)
-                except socket.timeout:
-                    continue
-                self.socket.settimeout(None)
-                finack_packet = RDTHeader().from_bytes(data)
-                break
-            while True:
-                if finack_packet.SYN == 0 and finack_packet.ACK == 1 and finack_packet.FIN == 1:
-                    ack = RDTHeader(test_case=20, ACK=1)
-                    ack.assign_address(self.local_address, tgt)
-                    self.socket.sendto(ack.to_bytes(), fromSenderAddr)
-                    print_header(ack)
-                    time.sleep(1)
-                    break
                 data, addr = self.socket.recvfrom(1024)
                 finack_packet = RDTHeader().from_bytes(data)
+                if finack_packet.SYN == 0 and finack_packet.ACK == 1 and finack_packet.FIN == 1:
+                    ack = RDTHeader(src=self.local_address, tgt=tgt, test_case=20, ACK=1)
+                    self.socket.sendto(ack.to_bytes(), fromSenderAddr)
+                    print_header(ack)
+                    break
         else:
-            ack = RDTHeader(test_case=20, ACK=1)
-            ack.assign_address(self.local_address, tgt)
+            # send ACK
+            ack = RDTHeader(src=self.local_address, tgt=tgt, test_case=20, ACK=1)
             self.socket.sendto(ack.to_bytes(), fromReceiverAddr)
             print_header(ack)
-
-            finack = RDTHeader(test_case=20, FIN=1, ACK=1)
-            finack.assign_address(self.local_address, tgt)
+            # send FIN-ACK
+            finack = RDTHeader(src=self.local_address, tgt=tgt, test_case=20, FIN=1, ACK=1)
             self.socket.sendto(finack.to_bytes(), fromReceiverAddr)
             print_header(finack)
 
-            # resend finack 2 times if not acknowledged
-            # self.socket.settimeout(10.0)
-            # try:
-            #     self.socket.recvfrom(1024)
-            # except socket.timeout:
-            #     self.socket.sendto(finack.to_bytes(), fromReceiverAddr)
-            #     print_header(finack)
-
-        self.socket.close()
-        self.buffer.clear()
-        self.connections.clear()
+        del self.connections[tgt]
+        if len(self.connections) == 0:
+            self.socket.close()

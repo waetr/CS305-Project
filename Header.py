@@ -1,6 +1,6 @@
 class RDTHeader():
-    def __init__(self, test_case: int = 0, SYN: int = 0, FIN: int = 0, ACK: int = 0, SEQ_num: int = 0, ACK_num: int = 0, LEN: int = 0,
-                 CHECKSUM: int = 0, PAYLOAD=None, RWND: int = 0) -> None:
+    def __init__(self, test_case: int = 0, SYN: int = 0, FIN: int = 0, ACK: int = 0, SEQ_num: int = 0, ACK_num: int = 0,
+                 LEN: int = 0, PAYLOAD=None, src=None, tgt=None) -> None:
         self.test_case = test_case  # Indicate the test case that will be used
 
         self.SYN = SYN  # 1 bytes
@@ -9,14 +9,16 @@ class RDTHeader():
         self.SEQ_num = SEQ_num  # 4 bytes
         self.ACK_num = ACK_num  # 4 bytes
         self.LEN = LEN  # 4 bytes
-        self.CHECKSUM = CHECKSUM  # 2 bytes
+        self.CHECKSUM = 0  # 2 bytes
         self.PAYLOAD = PAYLOAD  # Data LEN bytes
         # self.CWND = CWND                      # Congestion window size 4 bytes
-        self.RWND = RWND  # Notification window size 4 bytes
+        self.RWND = 0  # Notification window size 4 bytes
         self.Reserved = 0  # Reserved field for any attribte you need.
 
         self.Source_address = [127, 0, 0, 1, 12244]  # Souce ip and port
         self.Target_address = [127, 0, 0, 1, 12249]  # Target ip and port
+        if isinstance(src, tuple) and isinstance(tgt, tuple):
+            self.assign_address(src, tgt)
 
     def to_bytes(self):
         test_case = self.test_case.to_bytes(1, 'big')
@@ -111,7 +113,6 @@ class RDTHeader():
 
         return self
 
-
     def assign_address(self, Source_address: tuple, Target_address: tuple):
         source_ip = Source_address[0].split('.')
         target_ip = Target_address[0].split('.')
@@ -121,12 +122,10 @@ class RDTHeader():
         self.Source_address[4] = Source_address[1]
         self.Target_address[4] = Target_address[1]
 
-
     @property
     def src(self):
         return (f"{self.Source_address[0]}.{self.Source_address[1]}.{self.Source_address[2]}.{self.Source_address[3]}",
                 self.Source_address[4])
-
 
     @property
     def tgt(self):
