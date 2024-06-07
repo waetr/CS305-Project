@@ -32,8 +32,10 @@ def test_case():
         if sender_sock1:
             del sender_sock1
         sender_sock = RDTSocket(TYPE='client', testcase=i)  # You can change the initialize RDTSocket()
-        # sender_sock1 = RDTSocket(TYPE='client', testcase=i)  # You can change the initialize RDTSocket()
         reciever_sock = RDTSocket(TYPE='server', testcase=i)  # You can change the initialize RDTSocket()
+
+        # if you want to use 2 senders and 1 receiver, please uncomment this line
+        # sender_sock1 = RDTSocket(TYPE='client', testcase=i)  # You can change the initialize RDTSocket()
         print(f"Start test case : {i}")
 
         result = None

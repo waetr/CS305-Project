@@ -2,7 +2,9 @@
 
 **Team member: 黄弋骞 12012911; 刘腾飞 11911720**
 
-The original template code is available at: https://github.com/SUSTech-HPCLab/CS305-2024Spring-FinalProject.
+This code can be found at: https://github.com/waetr/CS305-Project
+
+The original template code is available at: https://github.com/SUSTech-HPCLab/CS305-2024Spring-FinalProject
 
 The code can now pass Testcases 0-15.
 
@@ -46,6 +48,12 @@ We have embedded the checksum verification in the `to_bytes()` and `from_bytes()
 ### Demultiplexing
 
 Demultiplexing in our RDT protocol is implemented in the `accept` method, which handles multiple client connections and isolates their data. The method listens for incoming data using `recvfrom` and extracts the header information with RDTHeader().from_bytes(data). If a SYN message is received (header.SYN == 1 and header.ACK == 0), the server responds with a SYN-ACK message. When a SYN-ACK message is received (header.SYN == 0 and header.ACK == 1), the server increments the connection count and stores the client's address in self.connections. __This process continues until the desired number of connections (connect_num) is reached__. By using `self.connections` to store client addresses and a loop to listen for data, the server can handle multiple connections simultaneously, ensuring that each client's data is isolated and properly managed.
+
+**Note: to test the demultiplexing function, please uncomment line 38 of `testcase.py` to initiate another sender:**
+
+```python
+sender_sock1 = RDTSocket(TYPE='client', testcase=i)  # You can change the initialize RDTSocket()
+```
 
 ### Big data transmission
 
