@@ -9,8 +9,9 @@ toSenderAddr = ('10.16.52.94', 12348)           # ToReceiver
 resultAddr = ('10.16.52.94', 12230)
 
 # TODO change the adress to your address
-sender_address = ("10.16.196.135", 12244)
-receiver_address = ("10.16.196.135", 12249)
+sender_address = ("10.24.189.145", 12244)
+sender_address1 = ("10.24.189.145", 12243)
+receiver_address = ("10.24.189.145", 12249)
 
 
 

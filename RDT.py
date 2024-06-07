@@ -19,6 +19,7 @@ class RDTSocket():
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.local_address = None
         self.connections = {}
+        self.connected = 0
         self.buffer = [{} for _ in range(8)]  # maximum of 8 connections
         self.isn = 0  # control multiple send requests
 
@@ -34,7 +35,7 @@ class RDTSocket():
         self.local_address = address
         # raise NotImplementedError()
 
-    def accept(self):  # type: ignore
+    def accept(self, connect_num=1):  # type: ignore
         """
         When using this SOCKET to create an RDT SERVER, it should accept the connection
         from a CLIENT. After that, an RDT connection should be established.
@@ -54,8 +55,10 @@ class RDTSocket():
                 print_header(response)
                 self.socket.sendto(response.to_bytes(), fromReceiverAddr)
             if header.SYN == 0 and header.ACK == 1:
-                self.connections[header.src] = 1
-                break
+                self.connected += 1
+                self.connections[header.src] = self.connected
+                if self.connected == connect_num:
+                    break
 
     def connect(self, address: (str, int)):  # type: ignore
         """
@@ -186,11 +189,18 @@ class RDTSocket():
                 self.socket.sendto(acknowledge.to_bytes(), fromReceiverAddr)
                 # print_header(acknowledge)
             if response.SYN == 0 and response.ACK == 0 and response.FIN == 1:
-                output = ""
-                for i in range(max_chunk + 1):
-                    output = output + self.buffer[connection_idx][i]
                 self.close(tgt=response.src)
-                return output, response.src
+                if self.connected == 0:
+                    break
+        for addr in self.connections:
+            connection_idx = self.connections[addr]
+            output = ""
+            for i in range(max_chunk + 1):
+                output = output + self.buffer[connection_idx][i]
+            self.connections[addr] = output
+        self.socket.close()
+        return self.connections
+
 
     def close(self, tgt=None):
         """
@@ -223,7 +233,4 @@ class RDTSocket():
             finack = RDTHeader(src=self.local_address, tgt=tgt, test_case=20, FIN=1, ACK=1)
             self.socket.sendto(finack.to_bytes(), fromReceiverAddr)
             print_header(finack)
-
-        del self.connections[tgt]
-        if len(self.connections) == 0:
-            self.socket.close()
+        self.connected -= 1
