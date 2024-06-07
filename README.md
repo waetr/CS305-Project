@@ -13,9 +13,7 @@ The code can now pass Testcases 0-15.
 4. checksum verification
 5. big file transmission and file chunking
 6. pipeline manner (including flow control & congestion control)
-
-**Features under development:**
-1. Demultiplexing
+7. Demultiplexing
 
 ## How to run
 
@@ -36,7 +34,10 @@ After that, the sender uses the `send()` function to send a string of data (a sh
 
 ### Connection Establishing
 
-[TODO: please fill the content about three-way handshake and waving-four-times here]
+In the provided code, the three-way handshake and four-way handshake are implemented to establish and terminate connections respectively. The three-way handshake involves the client sending a SYN packet, the server responding with a SYN-ACK packet, and the client completing the handshake with an ACK packet. This process is implemented in the `connect` method for the client and the `accept` method for the server. 
+
+
+For connection termination, the four-way handshake is used, where the initiator sends a FIN packet, the receiver responds with an ACK, then sends its own FIN, and the initiator completes the termination with an ACK. This is implemented in the `close` method. The `accept` method listens for incoming data, extracts headers, and handles SYN and ACK packets to establish connections. The connect method sends a SYN packet, waits for a SYN-ACK, and responds with an ACK. For termination, the `close` method handles sending and receiving FIN and ACK packets to ensure a clean connection closure. This ensures reliable connection setup and teardown in the RDT protocol.
 
 ### Checksum Verification
 
@@ -44,7 +45,7 @@ We have embedded the checksum verification in the `to_bytes()` and `from_bytes()
 
 ### Demultiplexing
 
-[TODO: please fill the content about demultiplexing here]
+Demultiplexing in our RDT protocol is implemented in the `accept` method, which handles multiple client connections and isolates their data. The method listens for incoming data using `recvfrom` and extracts the header information with RDTHeader().from_bytes(data). If a SYN message is received (header.SYN == 1 and header.ACK == 0), the server responds with a SYN-ACK message. When a SYN-ACK message is received (header.SYN == 0 and header.ACK == 1), the server increments the connection count and stores the client's address in self.connections. __This process continues until the desired number of connections (connect_num) is reached__. By using `self.connections` to store client addresses and a loop to listen for data, the server can handle multiple connections simultaneously, ensuring that each client's data is isolated and properly managed.
 
 ### Big data transmission
 
